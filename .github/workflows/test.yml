@@ -50,6 +50,7 @@ jobs:
           # Get latest Geode version (and dont put the jq with the curl request, for some reason.)
           retry_amount=10
           GEODE_VERSION=$(curl -s https://api.github.com/repos/geode-sdk/geode/releases/latest)
+          echo "geode version output $GEODE_VERSION"
           sleep 2
           GEODE_VERSION=$(echo $GEODE_VERSION | jq -r .tag_name)
           GEODE_VERSION=${GEODE_VERSION#v}
@@ -59,6 +60,7 @@ jobs:
             do
               if [ $GEODE_VERSION == null ]; then 
                 GEODE_VERSION=$(curl -s https://api.github.com/repos/geode-sdk/geode/releases/latest)
+                echo "geode version output $GEODE_VERSION"
                 sleep 2
                 GEODE_VERSION=$(echo $GEODE_VERSION | jq -r .tag_name)
                 GEODE_VERSION=${GEODE_VERSION#v}
