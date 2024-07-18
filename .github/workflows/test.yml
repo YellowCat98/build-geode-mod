@@ -61,7 +61,7 @@ jobs:
       - name: Modify example-mod files
         shell: bash
         run: |
-          GEODE_VERSION="${{ jobs.fetch-geode-version.outputs.geode_ver }}"
+          GEODE_VERSION="${{ needs.fetch-geode-version.outputs.geode_ver }}"
           if [ $GEODE_VERSION == null ]; then 
             echo "couldn't get le version, try again."
             exit 1;
