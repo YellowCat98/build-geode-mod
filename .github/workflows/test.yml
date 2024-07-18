@@ -7,6 +7,19 @@ on:
       - '**'
 
 jobs:
+  fetch-geode-version:
+    name: Get Geode Version
+    runs-on: ubuntu-latest
+    outputs:
+      geode_ver: ${{ steps.get_version.outputs.geode_version }}
+    steps:
+    - name: Get latest release tag
+      id: get_version
+      run: |
+        # Get latest Geode version
+        GEODE_VERSION=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/geode-sdk/geode/releases/latest | jq -r .tag_name)
+        GEODE_VERSION=${GEODE_VERSION#v}
+        echo "geode_version=$GEODE_VERSION" >> $GITHUB_OUTPUT
   build:
     strategy:
       fail-fast: false
@@ -32,6 +45,7 @@ jobs:
 
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
+    needs: ['fetch-geode-version']
 
     steps:
       - uses: actions/checkout@v4
@@ -47,26 +61,7 @@ jobs:
       - name: Modify example-mod files
         shell: bash
         run: |
-          # Get latest Geode version (and dont put the jq with the curl request, for some reason.)
-          retry_amount=10
-          GEODE_VERSION=$(curl -s https://api.github.com/repos/geode-sdk/geode/releases/latest)
-          echo "geode version output $GEODE_VERSION"
-          sleep 2
-          GEODE_VERSION=$(echo $GEODE_VERSION | jq -r .tag_name)
-          GEODE_VERSION=${GEODE_VERSION#v}
-
-          if [ $GEODE_VERSION == null ]; then 
-            for i in $(seq $retry_amount)
-            do
-              if [ $GEODE_VERSION == null ]; then 
-                GEODE_VERSION=$(curl -s https://api.github.com/repos/geode-sdk/geode/releases/latest)
-                echo "geode version output $GEODE_VERSION"
-                sleep 2
-                GEODE_VERSION=$(echo $GEODE_VERSION | jq -r .tag_name)
-                GEODE_VERSION=${GEODE_VERSION#v}
-              fi
-            done
-          fi
+          GEODE_VERSION="${{ jobs.fetch-geode-version.outputs.geode_ver }}"
           if [ $GEODE_VERSION == null ]; then 
             echo "couldn't get le version, try again."
             exit 1;
